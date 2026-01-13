@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Escape Room</title>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  background:#1794A0;
+  color:#473857;
+  text-align:center;
+}
+
+.screen{display:none;padding:25px;}
+.active{display:block;}
+
+h1{
+  background:#473857;
+  color:#EEC979;
+  padding:15px;
+  border-radius:14px;
+}
+
+button{
+  background:#EEC979;
+  border:none;
+  padding:12px 20px;
+  font-size:16px;
+  border-radius:12px;
+  margin:8px;
+}
+
+input{
+  padding:10px;
+  font-size:16px;
+  border-radius:10px;
+  border:none;
+  width:70%;
+}
+
+.year-box{
+  font-size:38px;
+  background:#473857;
+  color:#EEC979;
+  padding:15px;
+  border-radius:14px;
+  width:200px;
+  margin:15px auto;
+}
+
+.controls{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+}
+
+.col{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+.arrow{font-size:22px;width:45px;}
+
+img{
+  width:200px;
+  border-radius:12px;
+  border:4px solid #473857;
+  margin:15px 0;
+}
+
+/* ---- FOCOS ---- */
+.focos{
+  display:grid;
+  grid-template-columns:repeat(2,120px);
+  gap:15px;
+  justify-content:center;
+  margin-top:20px;
+}
+
+.foco{
+  width:120px;
+  height:120px;
+  border-radius:20px;
+  opacity:0.5;
+}
+
+.foco.activo{opacity:1;}
+
+.f0{background:red;}
+.f1{background:yellow;}
+.f2{background:green;}
+.f3{background:blue;}
+
+.msg{margin-top:15px;font-weight:bold;}
+</style>
+</head>
+
+<body>
+
+<!-- PANTALLA 1 -->
+<div class="screen active" id="s1">
+  <h1>ESCAPE ROOM</h1>
+  <input id="player" placeholder="Nombre del jugador"><br><br>
+  <button onclick="startGame()">INICIAR</button><br><br>
+  <button onclick="showScores()">PUNTAJES</button>
+</div>
+
+<!-- PANTALLA 2 -->
+<div class="screen" id="s2">
+  <h1>DESAFÍO 1</h1>
+  <p>Año de nacimiento de Vlad III</p>
+  <img src="Vlad_empalador.jpg">
+  <div class="year-box" id="year">0000</div>
+
+  <div class="controls">
+    <div class="col"><button class="arrow" onclick="chg('mil',1)">▲</button>Mil<button class="arrow" onclick="chg('mil',-1)">▼</button></div>
+    <div class="col"><button class="arrow" onclick="chg('cen',1)">▲</button>Cen<button class="arrow" onclick="chg('cen',-1)">▼</button></div>
+    <div class="col"><button class="arrow" onclick="chg('dec',1)">▲</button>Dec<button class="arrow" onclick="chg('dec',-1)">▼</button></div>
+    <div class="col"><button class="arrow" onclick="chg('uni',1)">▲</button>Uni<button class="arrow" onclick="chg('uni',-1)">▼</button></div>
+  </div>
+</div>
+
+<!-- PANTALLA 3 -->
+<div class="screen" id="s3">
+  <h1>DESAFÍO 2</h1>
+  <button onclick="mostrarSecuencia()">MOSTRAR SECUENCIA</button>
+
+  <div class="focos">
+    <div class="foco f0"></div>
+    <div class="foco f1"></div>
+    <div class="foco f2"></div>
+    <div class="foco f3"></div>
+  </div>
+
+  <div class="controls">
+    <button onclick="press(0)">ROJO</button>
+    <button onclick="press(1)">AMARILLO</button>
+    <button onclick="press(2)">VERDE</button>
+    <button onclick="press(3)">AZUL</button>
+  </div>
+
+  <div class="msg" id="msg"></div>
+</div>
+
+<script>
+window.onload = function(){
+
+let inicio, nombre;
+let mil=0, cen=0, dec=0, uni=0;
+let paso=0;
+const RESP1=1431;
+const sec=[0,3,1,2];
+
+// ---- PANTALLAS ----
+window.show = function(n){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+}
+
+// ---- RESET ----
+function resetFecha(){
+  mil=0; cen=0; dec=0; uni=0;
+  document.getElementById("year").innerText="0000";
+}
+
+// ---- INICIO ----
+window.startGame = function(){
+  nombre=document.getElementById("player").value || "Anónimo";
+  inicio=Date.now();
+  resetFecha();
+  paso=0;
+  document.getElementById("msg").innerText="";
+  show(2);
+}
+
+// ---- DESAFÍO 1 ----
+window.chg = function(p,v){
+  if(p=="mil") mil=Math.max(0,Math.min(9,mil+v));
+  if(p=="cen") cen=Math.max(0,Math.min(9,cen+v));
+  if(p=="dec") dec=Math.max(0,Math.min(9,dec+v));
+  if(p=="uni") uni=Math.max(0,Math.min(9,uni+v));
+
+  document.getElementById("year").innerText=`${mil}${cen}${dec}${uni}`;
+  let y=mil*1000+cen*100+dec*10+uni;
+  if(y===RESP1) show(3);
+}
+
+// ---- DESAFÍO 2 ----
+function enc(i){
+  let f=document.getElementsByClassName("foco")[i];
+  f.classList.add("activo");
+  setTimeout(()=>f.classList.remove("activo"),500);
+}
+
+window.mostrarSecuencia = function(){
+  paso=0;
+  document.getElementById("msg").innerText="";
+  sec.forEach((v,i)=>setTimeout(()=>enc(v),i*800));
+}
+
+window.press = function(i){
+  enc(i);
+  if(i===sec[paso]){
+    paso++;
+    if(paso===sec.length) finalizar();
+  }else{
+    paso=0;
+    document.getElementById("msg").innerText="❌ Error, intenta otra vez";
+  }
+}
+
+// ---- FINAL ----
+function finalizar(){
+  let tiempo=((Date.now()-inicio)/1000).toFixed(2);
+  let r=JSON.parse(localStorage.getItem("ranking")||"[]");
+  r.push({n:nombre,t:tiempo});
+  r.sort((a,b)=>a.t-b.t);
+  localStorage.setItem("ranking",JSON.stringify(r));
+  alert(`¡ESCAPASTE!\nTiempo: ${tiempo}s`);
+  show(1);
+}
+
+// ---- PUNTAJES ----
+window.showScores = function(){
+  let r=JSON.parse(localStorage.getItem("ranking")||"[]");
+  if(r.length===0){ alert("No hay puntajes aún"); return; }
+  let txt="🏆 PUNTAJES 🏆\n";
+  r.slice(0,5).forEach((e,i)=>txt+=`${i+1}. ${e.n} - ${e.t}s\n`);
+  alert(txt);
+}
+
+}
+</script>
+
+</body>
+</html>
